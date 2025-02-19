@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  password      String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  scheduledRides Ride[]    @relation("ScheduledRides")
+  bookedRides   Booking[]
+  bids          Bid[]
+}
+
+model Ride {
+  id            String    @id @default(cuid())
+  source        String
+  destination   String
+  date          DateTime
+  time          String
+  availableSeats Int
+  price         Float
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  scheduler     User      @relation("ScheduledRides", fields: [schedulerId], references: [id])
+  schedulerId   String
+  bookings      Booking[]
+  bids          Bid[]
+}
+
+model Booking {
+  id        String   @id @default(cuid())
+  ride      Ride     @relation(fields: [rideId], references: [id])
+  rideId    String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  createdAt DateTime @default(now())
+  status    BookingStatus @default(PENDING)
+}
+
+model Bid {
+  id        String   @id @default(cuid())
+  ride      Ride     @relation(fields: [rideId], references: [id])
+  rideId    String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  amount    Float
+  createdAt DateTime @default(now())
+  status    BidStatus @default(PENDING)
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+enum BidStatus {
+  PENDING
+  WON
+  LOST
+  CANCELLED
+}
+
